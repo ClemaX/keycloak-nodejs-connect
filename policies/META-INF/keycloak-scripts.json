@@ -1,0 +1,19 @@
+{
+	"policies": [
+		{
+			"name": "Default Policy",
+			"fileName": "grant.js",
+			"description": "Grant"
+		},
+		{
+			"name": "Delete Policy",
+			"fileName": "deny.js",
+			"description": "Deny"
+		},
+		{
+			"name": "Supported Browser Policy",
+			"fileName": "supported-browser.js",
+			"description": "Allow 'mozilla' user-agent"
+		}
+	]
+}

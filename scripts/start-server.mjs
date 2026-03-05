@@ -12,7 +12,9 @@ import { promisify } from 'node:util'
 import tar from 'tar-fs'
 
 const DIR_NAME = path.dirname(fileURLToPath(import.meta.url))
+const TMP_DIR = path.resolve(DIR_NAME, '../tmp')
 const SERVER_DIR = path.resolve(DIR_NAME, '../server')
+const POLICIES_DIR = path.resolve(DIR_NAME, '../policies')
 const SCRIPT_EXTENSION = process.platform === 'win32' ? '.bat' : '.sh'
 
 // TODO: Once support for Node.js 14 has been dropped this can be replaced with an import from 'node:stream/promises'.
@@ -22,7 +24,12 @@ const pipelineAsync = promisify(pipeline)
 await startServer()
 
 async function startServer () {
-  await downloadServer()
+  await Promise.all([
+    downloadServer(),
+    packagePolicies()
+  ])
+
+  installPolicies()
 
   console.info('Starting server…')
 
@@ -82,4 +89,41 @@ async function getAssetAsStream (asset) {
 
 function extractTarball (stream, path, options) {
   return pipelineAsync(stream, gunzip(), tar.extract(path, options))
+}
+
+async function packagePolicies () {
+  fs.mkdirSync(TMP_DIR, { recursive: true })
+
+  return /** @type {Promise<void>} */(new Promise((resolve, reject) => {
+    const packageFile = path.join(TMP_DIR, 'policies.jar')
+
+    const command = 'jar'
+    const args = ['cvf', packageFile, '-C', POLICIES_DIR, '.']
+
+    const child = spawn(command, args, {
+      stdio: 'ignore'
+    })
+
+    child.on('error', (error) => {
+      reject(error)
+    })
+
+    child.on('close', (code, signal) => {
+      if (code === 0) {
+        resolve()
+      } else {
+        const error = new Error(`jar command failed with exit code ${code}${signal ? `, killed by signal ${signal}` : ''}`)
+        reject(error)
+      }
+    })
+  }))
+}
+
+function installPolicies () {
+  const packageFile = path.join(TMP_DIR, 'policies.jar')
+  const providersDir = path.join(SERVER_DIR, 'providers')
+  const destination = path.join(providersDir, 'policies.jar')
+
+  fs.mkdirSync(providersDir, { recursive: true })
+  fs.copyFileSync(packageFile, destination)
 }

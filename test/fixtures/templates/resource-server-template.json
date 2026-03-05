@@ -52,24 +52,27 @@
         "policies": [
           {
             "name": "Default Policy",
-            "type": "js",
-            "config": {
-              "code": "$evaluation.grant();\n"
-            }
+            "description": "Grant",
+            "type": "script-grant.js",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {}
           },
           {
             "name": "Delete Policy",
-            "type": "js",
-            "config": {
-              "code": "$evaluation.deny();"
-            }
+            "description": "Deny",
+            "type": "script-deny.js",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {}
           },
           {
             "name": "Supported Browser Policy",
-            "type": "js",
-            "config": {
-              "code": "var context = $evaluation.context;var attributes = context.attributes;if (attributes.containsValue('user_agent', 'mozilla')) {$evaluation.grant();} else {$evaluation.deny();}"
-            }
+            "description": "Allow 'mozilla' user-agent",
+            "type": "script-supported-browser.js",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {}
           },          
           {
             "name": "Default Permission",
