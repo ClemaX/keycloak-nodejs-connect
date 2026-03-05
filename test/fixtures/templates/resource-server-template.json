@@ -47,6 +47,15 @@
           },
           {
             "name": "photo"
+          },
+          {
+            "name": "my:cool:resource",
+            "type": "urn:nodejs-apiserver:resources:default",
+            "scopes": [
+              {
+                "name": "read"
+              }
+            ]
           }
         ],
         "policies": [
@@ -97,6 +106,14 @@
             "scopes": ["delete"],
             "config": {
               "applyPolicies": "[\"Delete Policy\"]"
+            }
+          },
+          {
+            "name": "Resource With Colons Permission",
+            "type": "resource",
+            "resources": ["my:cool:resource"],
+            "config": {
+              "applyPolicies": "[\"Default Policy\"]"
             }
           }
         ]

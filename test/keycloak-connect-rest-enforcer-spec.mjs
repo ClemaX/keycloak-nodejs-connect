@@ -178,6 +178,27 @@ test('Should test access to resources without any permission defined.', t => {
   })
 })
 
+test('Should test access to resource with colons in name.', t => {
+  t.plan(4)
+  return getToken({ realmName }).then((token) => {
+    const opt = {
+      method: 'get',
+      url: `${app.address}/protected/enforcer/resource-with-colon`,
+      headers: { Authorization: `Bearer ${token}` }
+    }
+    return axios(opt)
+      .then(response => {
+        t.equal(response.data.message, 'my:cool:resource:read')
+        t.equal(response.data.permissions.length, 1)
+        t.equal(response.data.permissions[0].rsname, 'my:cool:resource')
+        t.equal(response.data.permissions[0].scopes[0], 'read')
+      })
+      .catch(error => {
+        t.fail(error.response.data)
+      })
+  })
+})
+
 test('teardown', t => {
   return realmManager.then((realm) => {
     app.destroy()

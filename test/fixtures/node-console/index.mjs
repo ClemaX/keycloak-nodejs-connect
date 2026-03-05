@@ -197,6 +197,10 @@ export function NodeApp () {
       res.json({ message: 'always grant', permissions: req.permissions })
     })
 
+    app.get('/protected/enforcer/resource-with-colon', keycloak.enforcer('my:cool:resource:read'), function (req, res) {
+      res.json({ message: 'my:cool:resource:read', permissions: req.permissions })
+    })
+
     app.get('/protected/web/resource', keycloak.enforcer(['resource:view']), function (req, res) {
       const user = req.kauth.grant.access_token.content.preferred_username
       output(res, user, 'Granted')
