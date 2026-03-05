@@ -37,16 +37,20 @@ test('Should be able to access resource protected by the policy enforcer', t => 
 
   return page.output().getText().then(text => {
     t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
-    page.logInButton().click()
-    page.login('test-admin', 'password')
-
-    return page.events().getText().then(text => {
-      t.equal(text, 'Auth Success', 'User should be authenticated')
-      page.grantedResourceButton().click()
-      return page.events().getText().then(text => {
+    return page.logInButton().click()
+      .then(() => page.login('test-admin', 'password'))
+      .then(() => page.events())
+      .then((events) => {
+        return events.getText().then(text => {
+          t.equal(text, 'Auth Success', 'User should be authenticated')
+          return page.grantedResourceButton().click()
+            .then(() => page.newEvents(events))
+        })
+      })
+      .then((events) => events.getText())
+      .then((text) => {
         t.equal(text, 'Granted', 'User can access resource protected by the policy enforcer')
       })
-    })
   })
 })
 

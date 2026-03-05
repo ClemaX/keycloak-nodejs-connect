@@ -59,17 +59,18 @@ test.skip('Should login with admin credentials', t => {
         return page.logInButton()
           .then(webElement => webElement.click())
           .then(() => page.login('test-admin', 'password'))
-          .then(() => page.events().getText().then(text => {
+          .then(() => page.events())
+          .then((events) => events.getText())
+          .then(text => {
             t.equal(text, 'Auth Success', 'User should be authenticated')
 
             return page.logOutButton()
               .then(webElement => webElement.click())
-              .then(() => page.output().getText()
-                .then(text => {
-                  t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
-                })
-              )
-          }))
+              .then(() => page.output().getText())
+              .then(text => {
+                t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
+              })
+          })
       })
     )
 })
@@ -79,52 +80,54 @@ test.skip('Login should not change tokens when they are valid', t => {
 
   return page.get(app.port).then(() =>
     page.logInButton().click().then(() =>
-      page.login('test-admin', 'password').then(() =>
-        page.events().getText().then(text => {
+      page.login('test-admin', 'password')
+        .then(() => page.events())
+        .then(events => events.getText())
+        .then(text => {
           t.equal(text, 'Auth Success', 'User should be authenticated')
+
           return page.output().getText().then(firstToken =>
             page.logInButton().click().then( // Invoke login for the second time, token shouldn't be changed
               page.output().getText().then(secondToken => {
                 t.equal(secondToken, firstToken, 'Token should not be changed as first session is still valid')
-                page.logOutButton().click()
-                return page.output().getText().then(text => {
-                  t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
-                })
+
+                return page.logOutButton().click()
               })
             )
           )
+            .then(() => page.output().getText())
+            .then(text => {
+              t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
+            })
         })
-      )
     )
   )
 })
 
 test.skip('SSO should work for nodejs app and testRealmAccountPage', t => {
-  return page.get(app.port).then(() =>
-    page.logInButton().click().then(() =>
-      page.login('test-admin', 'password').then(() =>
-        page.events().getText().then(text => {
-          t.equal(text, 'Auth Success', 'User should be authenticated')
+  return page.get(app.port)
+    .then(() => page.logInButton().click())
+    .then(() => page.login('test-admin', 'password'))
+    .then(() => page.events().then(events => events.getText()))
+    .then(text => {
+      t.equal(text, 'Auth Success', 'User should be authenticated')
 
-          return realmAccountPage.get().then(() =>
-            driver.getCurrentUrl().then(currentUrl => {
-              t.equal(currentUrl, realmAccountPage.getUrl(), 'Should be on account page')
+      return realmAccountPage.get()
+    })
+    .then(() => driver.getCurrentUrl())
+    .then(currentUrl => {
+      t.equal(currentUrl, realmAccountPage.getUrl(), 'Should be on account page')
 
-              return realmAccountPage.logout().then(() =>
-                driver.getCurrentUrl().then(currentUrl => {
-                  t.true(currentUrl.startsWith('http://127.0.0.1:8080/realms/test-realm/protocol/openid-connect/auth'), 'Should be on login page after AccountPage logout, current url: ' + currentUrl)
+      return realmAccountPage.logout()
+    })
+    .then(() => driver.getCurrentUrl())
+    .then(currentUrl => {
+      t.true(currentUrl.startsWith('http://127.0.0.1:8080/realms/test-realm/protocol/openid-connect/auth'), 'Should be on login page after AccountPage logout, current url: ' + currentUrl)
 
-                  return page.get(app.port, '/login').then(() =>
-                    t.true(currentUrl.startsWith('http://127.0.0.1:8080/realms/test-realm/protocol/openid-connect/auth'), 'Should be on login page, current url: ' + currentUrl)
-                  )
-                })
-              )
-            })
-          )
-        })
+      return page.get(app.port, '/login').then(() =>
+        t.true(currentUrl.startsWith('http://127.0.0.1:8080/realms/test-realm/protocol/openid-connect/auth'), 'Should be on login page, current url: ' + currentUrl)
       )
-    )
-  )
+    })
 })
 
 test.skip('Public client should be redirected to GitHub when idpHint is provided', t => {
@@ -254,25 +257,23 @@ test.skip('Public client should work with slash in the end of auth-server-url', 
     installation['auth-server-url'] = 'http://localhost:8080/'
     app.build(installation)
     return page.get(app.port)
-      .then(() => page.output().getText()
-        .then(text => {
-          t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
-          return page.logInButton()
-            .then(webElement => webElement.click())
-            .then(() => page.login('test-admin', 'password'))
-            .then(() => page.events().getText().then(text => {
-              t.equal(text, 'Auth Success', 'User should be authenticated')
-
-              return page.logOutButton()
-                .then(webElement => webElement.click())
-                .then(() => page.output().getText()
-                  .then(text => {
-                    t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
-                  })
-                )
-            }))
-        })
-      ).then(() => {
+      .then(() => page.output().getText())
+      .then(text => {
+        t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
+        return page.logInButton().click()
+      })
+      .then(() => page.login('test-admin', 'password'))
+      .then(() => page.events())
+      .then(events => events.getText())
+      .then(text => {
+        t.equal(text, 'Auth Success', 'User should be authenticated')
+        return page.logOutButton().click()
+      })
+      .then(() => page.output().getText())
+      .then(text => {
+        t.equal(text, 'Init Success (Not Authenticated)', 'User should not be authenticated')
+      })
+      .then(() => {
         app.destroy()
       }).catch(err => {
         app.destroy()
@@ -288,20 +289,19 @@ test.skip('App should be able to use cookie-store', t => {
 
   return client.then((installation) => {
     app.build(installation, { cookies: true })
-    return page.get(app.port, '/cookie').then(() => {
-      page.login('alice', 'password').then(() => {
-        driver.navigate().refresh().then(() => {
-          page.events().getText().then(text => {
-            t.equal(text, 'Auth Success', 'User should be authenticated')
-          })
-        })
+    return page.get(app.port, '/cookie')
+      .then(() => page.login('alice', 'password'))
+      .then(() => driver.navigate().refresh())
+      .then(() => page.events())
+      .then(events => events.getText())
+      .then(text => {
+        t.equal(text, 'Auth Success', 'User should be authenticated')
       })
-    }).then(() => {
-      app.destroy()
-    }).catch(err => {
-      app.destroy()
-      throw err
-    })
+  }).then(() => {
+    app.destroy()
+  }).catch(err => {
+    app.destroy()
+    throw err
   })
 })
 

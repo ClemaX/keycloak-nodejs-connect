@@ -106,8 +106,15 @@ ConsolePage.prototype.logOutButton = () => {
 }
 
 ConsolePage.prototype.events = function () {
-  waitForVisibleElement(By.id('events'), 100000)
-  return driver.findElement(By.id('events'))
+  return waitForVisibleElement(By.id('events'), 100000)
+    .then(() => driver.findElement(By.id('events')))
+}
+
+ConsolePage.prototype.newEvents = function (oldEvents) {
+  // Wait for old events to be stale
+  return driver.wait(until.stalenessOf(oldEvents), 100000)
+    .then(() => waitForVisibleElement(By.id('events'), 100000))
+    .then(() => driver.findElement(By.id('events')))
 }
 
 ConsolePage.prototype.print = function () {
@@ -121,16 +128,17 @@ ConsolePage.prototype.grantedResourceButton = function () {
 }
 
 ConsolePage.prototype.login = function (user, pass) {
-  waitForVisibleElement(By.id('username'), 100000)
-  const username = driver.findElement(By.id('username'))
-  username.clear()
-  username.sendKeys(user)
+  return waitForVisibleElement(By.id('username'), 100000)
+    .then(() => Promise.all([driver.findElement(By.id('username')), driver.findElement(By.id('password'))]))
+    .then(([username, password]) => {
+      username.clear()
+      username.sendKeys(user)
 
-  const password = driver.findElement(By.id('password'))
-  password.clear()
-  password.sendKeys(pass)
-
-  return driver.findElement(By.name('login')).then(webElement => webElement.click())
+      password.clear()
+      password.sendKeys(pass)
+    })
+    .then(() => driver.findElement(By.name('login')))
+    .then(webElement => webElement.click())
 }
 
 /**
@@ -153,7 +161,7 @@ ConsolePage.prototype.logout = function (port) {
  */
 ConsolePage.prototype.logoutConfirm = function () {
   waitForVisibleElement(By.id('kc-logout'), 100000)
-  return driver.findElement(By.id('kc-logout')).then(webElement => webElement.click())
+    .then(() => driver.findElement(By.id('kc-logout')).then(webElement => webElement.click()))
 }
 
 ConsolePage.prototype.body = () => {
