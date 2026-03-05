@@ -17,12 +17,16 @@
 
 function handlePermissions (permissions, callback) {
   for (let i = 0; i < permissions.length; i++) {
-    const expected = permissions[i].split(':')
-    const resource = expected[0]
-    let scope
+    const permission = permissions[i]
+    const separatorIndex = permission.lastIndexOf(':')
 
-    if (expected.length > 1) {
-      scope = expected[1]
+    let resource, scope
+    if (separatorIndex === -1) {
+      resource = permission
+      scope = undefined
+    } else {
+      resource = permission.substring(0, separatorIndex)
+      scope = permission.substring(separatorIndex + 1)
     }
 
     const r = callback(resource, scope)

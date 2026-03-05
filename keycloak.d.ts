@@ -342,7 +342,7 @@ declare namespace KeycloakConnect {
           // access granted
         });
      *
-     * @param {string[]} permissions A single string representing a permission or an array of strings representing the permissions. For instance, 'item:read' or ['item:read', 'item:write'].
+     * @param {string[]} permissions A single string representing a permission or an array of strings representing the permissions. For instance, 'item:read' or ['item:read', 'item:write']. The last colon separates the resource name from the scope. For example, 'my:item:read' is interpreted as resource 'my:item' with scope 'read'.
      */
     enforcer(permissions: string[]|string, config?: EnforcerOptions): express.RequestHandler
 
